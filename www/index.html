@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    
+    <!-- 🛡️ POLÍTICA CSP ESTRICTA Y PARCHEADA PARA ANDROID 9+ (cdvfile:) -->
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob: gap: cdvfile: https://ssl.gstatic.com;script-src * 'unsafe-inline' 'unsafe-eval' blob: data: cdvfile:;style-src * 'unsafe-inline' 'unsafe-eval' blob: data: cdvfile:;img-src * data: blob: cdvfile:;font-src * data: blob: cdvfile:;connect-src * blob: data: cdvfile: https://gloriadorada.com;media-src * cdvfile:;frame-src * data: blob: gap: cdvfile:;child-src * blob: data: gap: cdvfile:;worker-src * blob: data: 'unsafe-inline' 'unsafe-eval';"/>
+    
+    <meta name="viewport" content="initial-scale=1, width=device-width, viewport-fit=cover">
+    <title>Bóveda SaaS</title>
+    
+    <style>
+        /* Diseño Táctico / Secuencia de Arranque */
+        body { 
+            background-color: #0b0f19; /* Fondo oscuro táctico */
+            color: #00ffcc;           /* Texto neón */
+            font-family: 'Courier New', Courier, monospace; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            margin: 0; 
+            overflow: hidden;
+            transition: background-color 0.5s ease; /* Transición suave cuando el JS inyecte el panel médico */
+        }
+        
+        .logo-boveda {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+        }
+
+        .spinner { 
+            border: 3px solid rgba(0, 255, 204, 0.1); 
+            border-top: 3px solid #00ffcc; 
+            border-radius: 50%; 
+            width: 50px; 
+            height: 50px; 
+            animation: spin 1s cubic-bezier(0.55, 0.085, 0.68, 0.53) infinite; 
+            margin-bottom: 25px; 
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
+        }
+
+        /* Contenedor del texto para evitar saltos de línea bruscos */
+        .estado-contenedor {
+            text-align: center;
+            min-height: 60px; 
+            padding: 0 20px;
+        }
+
+        #estado-texto {
+            font-size: 14px;
+            line-height: 1.5;
+            margin: 0;
+            opacity: 0.9;
+        }
+
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="logo-boveda">BÓVEDA SaaS</div>
+    <div class="spinner"></div>
+    
+    <div class="estado-contenedor">
+        <!-- El Orquestador JS inyectará sus reportes aquí -->
+        <h3 id="estado-texto">Iniciando Enlace de Seguridad...</h3>
+    </div>
+    
+    <!-- DEPENDENCIAS VITALES -->
+    <script src="cordova.js"></script>
+    <script src="lib/crypto-js.min.js"></script>
+    
+    <!-- EL CEREBRO TÁCTICO (Asegúrate de pegar aquí el código maestro index.js que hicimos) -->
+    <script src="js/loader-mobile.js"></script>
+    
+</body>
+</html>
