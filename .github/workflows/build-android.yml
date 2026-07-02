@@ -109,11 +109,8 @@ jobs:
         find platforms/android/ -name "*.java" -exec sed -i 's/Whitelist whitelist/AllowList whitelist/g' {} + || true
         find platforms/android/ -name "*.java" -exec sed -i 's/(Whitelist)/(AllowList)/g' {} + || true
         find platforms/android/ -name "*.java" -exec sed -i 's/isUrlWhiteListed/isUrlAllowListed/g' {} + || true
-        
-        # 3. Doble seguro: Forzar CleartextTraffic nativo directo en el Manifest de Android
-        sed -i 's/<application /<application android:usesCleartextTraffic="true" /' platforms/android/app/src/main/AndroidManifest.xml || true
 
-        # 4. Inyectar API 35 a la fuerza bruta en el núcleo
+        # 3. Inyectar API 35 a la fuerza bruta en el núcleo
         echo "" >> platforms/android/app/build.gradle
         echo "android { compileSdk 35 }" >> platforms/android/app/build.gradle
         echo "android { defaultConfig { targetSdk 35 } }" >> platforms/android/app/build.gradle
