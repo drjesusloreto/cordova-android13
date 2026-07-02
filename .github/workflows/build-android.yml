@@ -1,0 +1,132 @@
+name: "Ungido Bóveda - Pipeline de Compilación API 35"
+
+on:
+  push:
+    branches: [ "main", "master", "desarrollo" ]
+  workflow_dispatch:
+
+jobs:
+  compile-android:
+    name: "Orquestador de Compilación en Nube"
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: "1. Descarga de Código Fuente"
+      uses: actions/checkout@v4
+
+    - name: "2. Inicializar Java JDK 17"
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    - name: "3. Inicializar Entorno Node.js"
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: "4. Instalar CLI de Cordova Globalmente"
+      run: |
+        npm install -g cordova@latest
+        
+    - name: "5. Forjar Bóveda de Seguridad (Inyección Binaria Directa)"
+      run: |
+        # Inyectamos el texto exacto de tu certificado blindado contra corrupción local
+        cat << 'EOF' > temp_base64.txt
+        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
+        EOF
+        # Eliminamos espacios en blanco/saltos de línea y forjamos el binario final
+        tr -d '\n\r ' < temp_base64.txt | base64 -d > adncristo.Keystore
+    - name: "6. Configurar Plataforma Android Embebida"
+      run: |
+        cordova platform add android@13.0.0
+        cordova prepare android
+    - name: "7. Blindaje Táctico (Forzar API 35 y Parches Legacy)"
+      run: |
+        # 1. Parche quirúrgico Gradle: Cambia dependencias pero respeta métodos nativos
+        find platforms/android/ -name "*.gradle" -exec sed -i -E 's/(^|[[:space:]])compile([[:space:]]|\()/\1implementation\2/g' {} + || true
+        
+        # 2. Parche Java: Migración forzada de Whitelist a AllowList para plugins obsoletos
+        find platforms/android/ -name "*.java" -exec sed -i 's/org.apache.cordova.Whitelist/org.apache.cordova.AllowList/g' {} + || true
+        find platforms/android/ -name "*.java" -exec sed -i 's/Whitelist whitelist/AllowList whitelist/g' {} + || true
+        find platforms/android/ -name "*.java" -exec sed -i 's/(Whitelist)/(AllowList)/g' {} + || true
+        find platforms/android/ -name "*.java" -exec sed -i 's/isUrlWhiteListed/isUrlAllowListed/g' {} + || true
+        
+        # 3. Inyectar API 35 a la fuerza bruta en el núcleo
+        echo "" >> platforms/android/app/build.gradle
+        echo "android { compileSdk 35 }" >> platforms/android/app/build.gradle
+        echo "android { defaultConfig { targetSdk 35 } }" >> platforms/android/app/build.gradle
+    - name: "8. Ensamblaje Final: Formato AAB (Google Play Store)"
+      run: |
+        cordova compile android --release -- \
+        --keystore=adncristo.Keystore \
+        --storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
+        --alias=${{ secrets.ANDROID_KEYSTORE_ALIAS }} \
+        --password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
+        --packageType=bundle \
+        --gradleArg=-PcdvCompileSdkVersion=35 \
+        --gradleArg=-PcdvTargetSdkVersion=35
+    - name: "9. Ensamblaje Final: Formato APK (Distribución Directa)"
+      run: |
+        cordova compile android --release -- \
+        --keystore=adncristo.Keystore \
+        --storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
+        --alias=${{ secrets.ANDROID_KEYSTORE_ALIAS }} \
+        --password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
+        --packageType=apk \
+        --gradleArg=-PcdvCompileSdkVersion=35 \
+        --gradleArg=-PcdvTargetSdkVersion=35
+    - name: "10. Preservar y Exportar Artefactos Clínicos (APK + AAB)"
+      uses: actions/upload-artifact@v4
+      with:
+        name: "Ungido-Boveda-API35-Release"
+        path: |
+          platforms/android/app/build/outputs/apk/release/*.apk
+          platforms/android/app/build/outputs/bundle/release/*.aab
+        retention-days: 365
