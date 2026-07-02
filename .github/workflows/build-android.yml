@@ -83,11 +83,22 @@ jobs:
         EOF
         # Eliminamos espacios en blanco/saltos de línea y forjamos el binario final
         tr -d '\n\r ' < temp_base64.txt | base64 -d > adncristo.Keystore
-    - name: "6. Configurar Plataforma Android Embebida"
+    - name: "6. Configurar Plataforma (Modo Pausa / Sin Hooks)"
       run: |
-        cordova platform add android@13.0.0
+        # Instalamos Android pero CONGELAMOS la ejecución automática de los plugins
+        cordova platform add android@13.0.0 --nohooks
+
+    - name: "6.5. Intercepción Criptográfica (Bypass IPv6)"
+      run: |
+        # Hackeamos el plugin en su estado latente antes de que pueda ejecutarse
+        find plugins/ -type f -name "after_prepare.js" -exec sed -i 's/localhost/127.0.0.1/g' {} + || true
+        find plugins/ -type f -name "*.java" -exec sed -i 's/"localhost"/"127.0.0.1"/g' {} + || true
+
+    - name: "6.6. Detonación Controlada (Prepare)"
+      run: |
+        # Ejecutamos la preparación. El plugin despertará, pero ahora inyectará 127.0.0.1
         cordova prepare android
-    
+
     - name: "7. Blindaje Táctico (Forzar API 35 y Parches Legacy)"
       run: |
         # 1. Parche quirúrgico Gradle
@@ -99,11 +110,8 @@ jobs:
         find platforms/android/ -name "*.java" -exec sed -i 's/(Whitelist)/(AllowList)/g' {} + || true
         find platforms/android/ -name "*.java" -exec sed -i 's/isUrlWhiteListed/isUrlAllowListed/g' {} + || true
         
-        # 3. ☢️ BYPASS IPv6: ERRADICACIÓN TOTAL DE LOCALHOST ☢️
-        # Modificamos el servidor Java, scripts ocultos en node_modules y el config.xml generado
-        find platforms/android/ plugins/ node_modules/ -type f -name "*.java" -exec sed -i 's/"localhost"/"127.0.0.1"/g' {} + || true
-        find platforms/android/ plugins/ node_modules/ -type f -name "*.js" -exec sed -i 's/localhost/127.0.0.1/g' {} + || true
-        find platforms/android/ -type f -name "config.xml" -exec sed -i 's/localhost/127.0.0.1/g' {} + || true
+        # 3. Doble seguro: Forzar CleartextTraffic nativo directo en el Manifest de Android
+        sed -i 's/<application /<application android:usesCleartextTraffic="true" /' platforms/android/app/src/main/AndroidManifest.xml || true
 
         # 4. Inyectar API 35 a la fuerza bruta en el núcleo
         echo "" >> platforms/android/app/build.gradle
