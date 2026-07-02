@@ -26,8 +26,9 @@
     <allow-intent href="whatsapp:*" />
     <allow-intent href="https://wa.me/*" />
 
-    <preference name="scheme" value="https" />
-    <preference name="hostname" value="localhost" />
+    <preference name="scheme" value="http" />
+    <preference name="hostname" value="127.0.0.1" />
+    <allow-navigation href="http://127.0.0.1:8080/*" />
 
     <platform name="android">
         <config-file target="AndroidManifest.xml" parent="/*">
