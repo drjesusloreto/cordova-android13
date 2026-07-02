@@ -89,20 +89,17 @@ jobs:
         npm cache clean --force
         cordova platform add android@13.0.0 --nohooks
 
-    - name: "6.5. Intercepción Criptográfica (Bypass IPv4 Definitivo)"
+    - name: "6.5. Intercepción Criptográfica (Bypass IPv4 Total)"
       run: |
-        # 1. Castrar la inyección de 'localhost' y forzar IPv4 puro en el secuestrador del config.xml
+        # Reemplazo agresivo sin comillas para erradicar cualquier rastro de localhost en el plugin Java
+        find plugins/ -type f -name "*.java" -exec sed -i 's/localhost/127.0.0.1/g' {} + || true
         find plugins/ -type f -name "after_prepare.js" -exec sed -i 's/localhost/127.0.0.1/g' {} + || true
-        
-        # 2. Hackear el servidor Java interno para que escuche y responda estrictamente en IPv4
-        find plugins/ -type f -name "*.java" -exec sed -i 's/"localhost"/"127.0.0.1"/g' {} + || true
 
     - name: "6.6. Detonación Controlada (Prepare)"
       run: |
-        # Al ejecutar prepare, el plugin despertará pero inyectará la ruta blindada http://127.0.0.1:8080
         cordova prepare android
-        
-    - name: "7. Blindaje Táctico (Forzar API 35 y Parches Legacy)"
+
+    - name: "7. Blindaje Táctico (Forzar API 35, Parches Legacy y Red)"
       run: |
         # 1. Parche quirúrgico Gradle
         find platforms/android/ -name "*.gradle" -exec sed -i -E 's/(^|[[:space:]])compile([[:space:]]|\()/\1implementation\2/g' {} + || true
@@ -112,8 +109,12 @@ jobs:
         find platforms/android/ -name "*.java" -exec sed -i 's/Whitelist whitelist/AllowList whitelist/g' {} + || true
         find platforms/android/ -name "*.java" -exec sed -i 's/(Whitelist)/(AllowList)/g' {} + || true
         find platforms/android/ -name "*.java" -exec sed -i 's/isUrlWhiteListed/isUrlAllowListed/g' {} + || true
+        
+        # 3. ☢️ NÚCLEO DE SEGURIDAD: DESTRUCCIÓN DEL BLOQUEO CLEARTEXT ☢️
+        # Sobreescribimos el escudo nativo de Android para forzar la autorización HTTP en 127.0.0.1
+        echo '<?xml version="1.0" encoding="utf-8"?><network-security-config><base-config cleartextTrafficPermitted="true" /></network-security-config>' > platforms/android/app/src/main/res/xml/network_security_config.xml
 
-        # 3. Inyectar API 35 a la fuerza bruta en el núcleo
+        # 4. Inyectar API 35 a la fuerza bruta en el núcleo
         echo "" >> platforms/android/app/build.gradle
         echo "android { compileSdk 35 }" >> platforms/android/app/build.gradle
         echo "android { defaultConfig { targetSdk 35 } }" >> platforms/android/app/build.gradle
