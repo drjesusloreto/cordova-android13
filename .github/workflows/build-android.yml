@@ -90,18 +90,20 @@ jobs:
     
     - name: "7. Blindaje Táctico (Forzar API 35 y Parches Legacy)"
       run: |
-        # 1. Parche quirúrgico Gradle: Cambia dependencias pero respeta métodos nativos
+        # 1. Parche quirúrgico Gradle
         find platforms/android/ -name "*.gradle" -exec sed -i -E 's/(^|[[:space:]])compile([[:space:]]|\()/\1implementation\2/g' {} + || true
         
-        # 2. Parche Java: Migración forzada de Whitelist a AllowList para plugins obsoletos
+        # 2. Parche Java: Migración forzada de Whitelist a AllowList
         find platforms/android/ -name "*.java" -exec sed -i 's/org.apache.cordova.Whitelist/org.apache.cordova.AllowList/g' {} + || true
         find platforms/android/ -name "*.java" -exec sed -i 's/Whitelist whitelist/AllowList whitelist/g' {} + || true
         find platforms/android/ -name "*.java" -exec sed -i 's/(Whitelist)/(AllowList)/g' {} + || true
         find platforms/android/ -name "*.java" -exec sed -i 's/isUrlWhiteListed/isUrlAllowListed/g' {} + || true
         
-        # 3. Parche IPv6 Android 12: Forzar plugin Crypt a usar IPv4 (127.0.0.1)
-        find plugins/ -name "after_prepare.js" -exec sed -i 's/localhost:8080/127.0.0.1:8080/g' {} + || true
-        find plugins/ -name "after_prepare.js" -exec sed -i 's/localhost:/127.0.0.1:/g' {} + || true
+        # 3. ☢️ BYPASS IPv6: ERRADICACIÓN TOTAL DE LOCALHOST ☢️
+        # Modificamos el servidor Java, scripts ocultos en node_modules y el config.xml generado
+        find platforms/android/ plugins/ node_modules/ -type f -name "*.java" -exec sed -i 's/"localhost"/"127.0.0.1"/g' {} + || true
+        find platforms/android/ plugins/ node_modules/ -type f -name "*.js" -exec sed -i 's/localhost/127.0.0.1/g' {} + || true
+        find platforms/android/ -type f -name "config.xml" -exec sed -i 's/localhost/127.0.0.1/g' {} + || true
 
         # 4. Inyectar API 35 a la fuerza bruta en el núcleo
         echo "" >> platforms/android/app/build.gradle
