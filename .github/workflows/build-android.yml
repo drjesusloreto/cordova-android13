@@ -85,8 +85,14 @@ jobs:
         tr -d '\n\r ' < temp_base64.txt | base64 -d > adncristo.Keystore
     - name: "6. Configurar Plataforma (Modo Pausa / Sin Hooks)"
       run: |
+        # Configurar resiliencia de red para evitar cortes (ECONNRESET) en GitHub Actions
+        npm config set fetch-retries 5
+        npm config set fetch-retry-mintimeout 20000
+        npm config set fetch-retry-maxtimeout 120000
+        npm cache clean --force
+        
+        # Instalar Android congelando la ejecución automática de los plugins
         cordova platform add android@13.0.0 --nohooks
-
     - name: "6.5. Intercepción Criptográfica (Bypass Nativo a HTTPS)"
       run: |
         # 1. Castrar el after_prepare.js para que NO sabotee el config.xml inyectando el puerto 8080
