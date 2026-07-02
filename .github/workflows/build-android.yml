@@ -85,18 +85,21 @@ jobs:
         tr -d '\n\r ' < temp_base64.txt | base64 -d > adncristo.Keystore
     - name: "6. Configurar Plataforma (Modo Pausa / Sin Hooks)"
       run: |
-        # Instalamos Android pero CONGELAMOS la ejecución automática de los plugins
         cordova platform add android@13.0.0 --nohooks
 
-    - name: "6.5. Intercepción Criptográfica (Bypass IPv6)"
+    - name: "6.5. Intercepción Criptográfica (Bypass Nativo a HTTPS)"
       run: |
-        # Hackeamos el plugin en su estado latente antes de que pueda ejecutarse
-        find plugins/ -type f -name "after_prepare.js" -exec sed -i 's/localhost/127.0.0.1/g' {} + || true
-        find plugins/ -type f -name "*.java" -exec sed -i 's/"localhost"/"127.0.0.1"/g' {} + || true
+        # 1. Castrar el after_prepare.js para que NO sabotee el config.xml inyectando el puerto 8080
+        find plugins/ -type f -name "after_prepare.js" -exec sed -i 's/child.attrib.src =.*/\/\/ Inyeccion del puerto 8080 anulada por la Comandancia/g' {} + || true
+        
+        # 2. Hackear el código Java del plugin Crypt para que intercepte la ruta nativa HTTPS de Cordova 13
+        # Esto convierte cualquier referencia a "http://localhost:8080/" (o derivados) en la ruta moderna "https://localhost/"
+        find plugins/ -type f -name "*.java" -exec sed -i 's/"http:\/\/localhost[^"]*"/"https:\/\/localhost\/"/g' {} + || true
+        find plugins/ -type f -name "*.java" -exec sed -i 's/"http:\/\/127.0.0.1[^"]*"/"https:\/\/localhost\/"/g' {} + || true
 
     - name: "6.6. Detonación Controlada (Prepare)"
       run: |
-        # Ejecutamos la preparación. El plugin despertará, pero ahora inyectará 127.0.0.1
+        # Al ejecutar prepare, el plugin encriptará los archivos, pero el Java parchado se copiará al núcleo.
         cordova prepare android
 
     - name: "7. Blindaje Táctico (Forzar API 35 y Parches Legacy)"
