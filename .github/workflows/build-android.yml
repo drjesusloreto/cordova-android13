@@ -89,18 +89,19 @@ jobs:
         npm cache clean --force
         cordova platform add android@13.0.0 --nohooks
 
-    - name: "6.5. Mutación Genética Criptográfica (Bypass Nativo API 35)"
+    - name: "6.5. Intercepción Criptográfica (Bypass IPv4 Definitivo)"
       run: |
-        # Hackeamos el código Java del plugin Crypt para que intercepte la ruta moderna (https://localhost)
-        # Esto reemplaza la ruta antigua "file:///android_asset/www" en la expresión regular del desencriptador
-        find plugins/ -type f -name "DecryptResource.java" -exec sed -i 's/file:\/\/\/android_asset\/www/https:\/\/localhost/g' {} + || true
-        find plugins/ -type f -name "CryptFilePlugin.java" -exec sed -i 's/file:\/\/\/android_asset\/www/https:\/\/localhost/g' {} + || true
+        # 1. Castrar la inyección de 'localhost' y forzar IPv4 puro en el secuestrador del config.xml
+        find plugins/ -type f -name "after_prepare.js" -exec sed -i 's/localhost/127.0.0.1/g' {} + || true
+        
+        # 2. Hackear el servidor Java interno para que escuche y responda estrictamente en IPv4
+        find plugins/ -type f -name "*.java" -exec sed -i 's/"localhost"/"127.0.0.1"/g' {} + || true
 
     - name: "6.6. Detonación Controlada (Prepare)"
       run: |
-        # Al hacer prepare, el plugin encripta los archivos físicos y copia nuestro Java mutado al núcleo de Android
+        # Al ejecutar prepare, el plugin despertará pero inyectará la ruta blindada http://127.0.0.1:8080
         cordova prepare android
-
+        
     - name: "7. Blindaje Táctico (Forzar API 35 y Parches Legacy)"
       run: |
         # 1. Parche quirúrgico Gradle
