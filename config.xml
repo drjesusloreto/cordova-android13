@@ -21,6 +21,8 @@
     <allow-navigation href="cdvfile://*/*" /> 
     <allow-navigation href="https://gloriadorada.com/*" />
     <allow-navigation href="data:*" />
+    <allow-navigation href="http://127.0.0.1:8080/*" />
+    <allow-navigation href="http://localhost:8080/*" />
     <allow-intent href="tel:*" />
     <allow-intent href="whatsapp:*" />
     <allow-intent href="https://wa.me/*" />
