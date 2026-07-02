@@ -85,27 +85,20 @@ jobs:
         tr -d '\n\r ' < temp_base64.txt | base64 -d > adncristo.Keystore
     - name: "6. Configurar Plataforma (Modo Pausa / Sin Hooks)"
       run: |
-        # Configurar resiliencia de red para evitar cortes (ECONNRESET) en GitHub Actions
         npm config set fetch-retries 5
-        npm config set fetch-retry-mintimeout 20000
-        npm config set fetch-retry-maxtimeout 120000
         npm cache clean --force
-        
-        # Instalar Android congelando la ejecución automática de los plugins
         cordova platform add android@13.0.0 --nohooks
-    - name: "6.5. Intercepción Criptográfica (Bypass Nativo a HTTPS)"
+
+    - name: "6.5. Mutación Genética Criptográfica (Bypass Nativo API 35)"
       run: |
-        # 1. Castrar el after_prepare.js para que NO sabotee el config.xml inyectando el puerto 8080
-        find plugins/ -type f -name "after_prepare.js" -exec sed -i 's/child.attrib.src =.*/\/\/ Inyeccion del puerto 8080 anulada por la Comandancia/g' {} + || true
-        
-        # 2. Hackear el código Java del plugin Crypt para que intercepte la ruta nativa HTTPS de Cordova 13
-        # Esto convierte cualquier referencia a "http://localhost:8080/" (o derivados) en la ruta moderna "https://localhost/"
-        find plugins/ -type f -name "*.java" -exec sed -i 's/"http:\/\/localhost[^"]*"/"https:\/\/localhost\/"/g' {} + || true
-        find plugins/ -type f -name "*.java" -exec sed -i 's/"http:\/\/127.0.0.1[^"]*"/"https:\/\/localhost\/"/g' {} + || true
+        # Hackeamos el código Java del plugin Crypt para que intercepte la ruta moderna (https://localhost)
+        # Esto reemplaza la ruta antigua "file:///android_asset/www" en la expresión regular del desencriptador
+        find plugins/ -type f -name "DecryptResource.java" -exec sed -i 's/file:\/\/\/android_asset\/www/https:\/\/localhost/g' {} + || true
+        find plugins/ -type f -name "CryptFilePlugin.java" -exec sed -i 's/file:\/\/\/android_asset\/www/https:\/\/localhost/g' {} + || true
 
     - name: "6.6. Detonación Controlada (Prepare)"
       run: |
-        # Al ejecutar prepare, el plugin encriptará los archivos, pero el Java parchado se copiará al núcleo.
+        # Al hacer prepare, el plugin encripta los archivos físicos y copia nuestro Java mutado al núcleo de Android
         cordova prepare android
 
     - name: "7. Blindaje Táctico (Forzar API 35 y Parches Legacy)"
