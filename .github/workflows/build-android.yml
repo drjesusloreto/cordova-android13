@@ -152,12 +152,19 @@ jobs:
 
     - name: "10. Blindaje Táctico (Forzar API 35 y Parches Legacy)"
       run: |
+        # 1. Parche quirúrgico Gradle: Cambia dependencias pero respeta métodos nativos
         find platforms/android/ -name "*.gradle" -exec sed -i -E 's/(^|[[:space:]])compile([[:space:]]|\()/\1implementation\2/g' {} + || true
+        
+        # 2. Parche Java: Migración forzada de Whitelist a AllowList para plugins obsoletos
         find platforms/android/ -name "*.java" -exec sed -i 's/org.apache.cordova.Whitelist/org.apache.cordova.AllowList/g' {} + || true
         find platforms/android/ -name "*.java" -exec sed -i 's/Whitelist whitelist/AllowList whitelist/g' {} + || true
         find platforms/android/ -name "*.java" -exec sed -i 's/(Whitelist)/(AllowList)/g' {} + || true
         find platforms/android/ -name "*.java" -exec sed -i 's/isUrlWhiteListed/isUrlAllowListed/g' {} + || true
         
+        # 🚀 3. NUEVO: Parche Anti-Baklava (Neutraliza dependencias de Android 16 en el motor de Cordova)
+        find platforms/android/ -name "*.java" -exec sed -i 's/Build.VERSION_CODES.BAKLAVA/36/g' {} + || true
+        
+        # 4. Inyectar API 35 a la fuerza bruta en el núcleo
         echo "" >> platforms/android/app/build.gradle
         echo "android { compileSdk 35 }" >> platforms/android/app/build.gradle
         echo "android { defaultConfig { targetSdk 35 } }" >> platforms/android/app/build.gradle
