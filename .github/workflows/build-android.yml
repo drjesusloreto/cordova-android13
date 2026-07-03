@@ -23,7 +23,7 @@ jobs:
     - name: "3. Inicializar Entorno Node.js"
       uses: actions/setup-node@v4
       with:
-        node-version: '20' # Versión LTS madura. Node 20 es el estándar blindado para Cordova 13
+        node-version: '24' # Versión LTS madura. Node 20 es el estándar blindado para Cordova 13
 
     - name: "4. Instalar CLI de Cordova Globalmente"
       run: |
