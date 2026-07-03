@@ -3,8 +3,7 @@
 <head>
     <meta charset="utf-8">
     
-    <!-- 🛡️ POLÍTICA CSP ESTRICTA Y PARCHEADA PARA ANDROID 9+ (cdvfile:) -->
-    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob: gap: cdvfile: https://ssl.gstatic.com;script-src * 'unsafe-inline' 'unsafe-eval' blob: data: cdvfile:;style-src * 'unsafe-inline' 'unsafe-eval' blob: data: cdvfile:;img-src * data: blob: cdvfile:;font-src * data: blob: cdvfile:;connect-src * blob: data: cdvfile: https://gloriadorada.com;media-src * cdvfile:;frame-src * data: blob: gap: cdvfile:;child-src * blob: data: gap: cdvfile:;worker-src * blob: data: 'unsafe-inline' 'unsafe-eval';"/>
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob: gap: cdvfile: https://ssl.gstatic.com https://localhost; script-src * 'unsafe-inline' 'unsafe-eval' blob: data: cdvfile: https://localhost; style-src * 'unsafe-inline' 'unsafe-eval' blob: data: cdvfile: https://localhost; img-src * data: blob: cdvfile: https://localhost; font-src * data: blob: cdvfile: https://localhost; connect-src * blob: data: cdvfile: https://gloriadorada.com https://localhost; media-src * cdvfile: https://localhost; frame-src * data: blob: gap: cdvfile: https://localhost; child-src * blob: data: gap: cdvfile: https://localhost; worker-src * blob: data: 'unsafe-inline' 'unsafe-eval' https://localhost;"/>
     
     <meta name="viewport" content="initial-scale=1, width=device-width, viewport-fit=cover">
     <title>Bóveda SaaS</title>
@@ -70,15 +69,12 @@
     <div class="spinner"></div>
     
     <div class="estado-contenedor">
-        <!-- El Orquestador JS inyectará sus reportes aquí -->
         <h3 id="estado-texto">Iniciando Enlace de Seguridad...</h3>
     </div>
     
-    <!-- DEPENDENCIAS VITALES -->
     <script src="cordova.js"></script>
     <script src="lib/crypto-js.min.js"></script>
     
-    <!-- EL CEREBRO TÁCTICO (Asegúrate de pegar aquí el código maestro index.js que hicimos) -->
     <script src="js/loader-mobile.js"></script>
     
 </body>
