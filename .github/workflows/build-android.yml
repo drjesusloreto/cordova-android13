@@ -1,52 +1,52 @@
 name: "Ungido - Pipeline de Compilación Táctica API 35"
-on:
-  push:
-    branches: [ "main", "master", "desarrollo" ]
+
+on:  
+  push:    
+    branches: [ "main", "master", "desarrollo" ]  
   workflow_dispatch: # Permite disparar la compilación manualmente desde la interfaz de GitHub
 
-jobs:
-  compile-android:
-    name: "Orquestador de Compilación en Nube"
-    runs-on: ubuntu-latest # Infraestructura nativa Linux x64
-
-    steps:
-    - name: "1. Descarga de Código Fuente"
-      uses: actions/checkout@v4
-
-    - name: "2. Inicializar Java JDK 17"
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'zulu'
-        java-version: '17' # Requerido obligatoriamente por Gradle 8.x para API 35
-
-    - name: "3. Inicializar Entorno Node.js"
-      uses: actions/setup-node@v4
-      with:
-        node-version: '24' # Versión LTS madura. Node 20 es el estándar blindado para Cordova 13
-
-    - name: "4. Instalar CLI de Cordova Globalmente"
-      run: |
-        npm install -g cordova@latest
-        
-    - name: "5. Preparar Arsenal Criptográfico (Dependencias de Seguridad)"
-      run: |
-        npm install crypto-js javascript-obfuscator
-
-    - name: "6. Operación Espejo (Cifrado AES de Módulos - Backend Node)"
-      env:
-        LLAVE_TACTICA: ${{ secrets.LLAVE_TACTICA }}
-      run: |
-        # Ejecuta el script de Node que lee los .js, los cifra a .enc y borra los originales
-        node scripts/cifrador.js || true
-
-    - name: "6.5 Inyección Criptográfica en Cliente (Zero-Trust JS)"
-      run: |
-        # Inyecta la llave de forma efímera en el Orquestador
-        sed -i "s/__LLAVE_TACTICA__/${{ secrets.LLAVE_TACTICA }}/g" www/js/loader-mobile.js || true
-
-    - name: "7. Operación Niebla (Blindaje Extremo del Orquestador)"
-      run: |
-        # Destruye la legibilidad del loader-mobile.js, oculta la llave inyectada y bloquea depuradores
+jobs:  
+  compile-android:    
+    name: "Orquestador de Compilación en Nube"    
+    runs-on: ubuntu-latest # Infraestructura nativa Linux x64    
+    steps:    
+    - name: "1. Descarga de Código Fuente"      
+      uses: actions/checkout@v4    
+    
+    - name: "2. Inicializar Java JDK 17"      
+      uses: actions/setup-java@v4      
+      with:        
+        distribution: 'zulu'        
+        java-version: '17' # Requerido obligatoriamente por Gradle 8.x para API 35    
+    
+    - name: "3. Inicializar Entorno Node.js"      
+      uses: actions/setup-node@v4      
+      with:        
+        node-version: '24' # Versión LTS madura. Node 20 es el estándar blindado para Cordova 13    
+    
+    - name: "4. Instalar CLI de Cordova Globalmente"      
+      run: |        
+        npm install -g cordova@latest            
+    
+    - name: "5. Preparar Arsenal Criptográfico (Dependencias de Seguridad)"      
+      run: |        
+        npm install crypto-js javascript-obfuscator    
+    
+    - name: "6. Operación Espejo (Cifrado AES de Módulos - Backend Node)"      
+      env:        
+        LLAVE_TACTICA: ${{ secrets.LLAVE_TACTICA }}      
+      run: |        
+        # Ejecuta el script de Node que lee los .js, los cifra a .enc y borra los originales        
+        node scripts/cifrador.js || true    
+    
+    - name: "6.5 Inyección Criptográfica en Cliente (Zero-Trust JS)"      
+      run: |        
+        # Inyecta la llave de forma efímera en el Orquestador        
+        sed -i "s/__LLAVE_TACTICA__/${{ secrets.LLAVE_TACTICA }}/g" www/js/loader-mobile.js || true    
+    
+    - name: "7. Operación Niebla (Blindaje Ajustado para Evitar Pantalla Gris)"      
+      run: |    
+        # Se desactiva la autodefensa y el bloqueo de consola temporalmente para permitir el renderizado del WebView
         npx javascript-obfuscator www/js/loader-mobile.js --output www/js/loader-mobile.js \
           --compact true \
           --control-flow-flattening true \
@@ -58,18 +58,17 @@ jobs:
           --string-array-index-shift true \
           --string-array-wrappers-count 2 \
           --string-array-wrappers-chained-calls true \
-          --self-defending true \
-          --debug-protection true \
-          --disable-console-output true \
+          --self-defending false \
+          --debug-protection false \
+          --disable-console-output false \
           --rename-globals false \
           --domain-lock 'localhost' \
           --domain-lock 'file://' \
-          --domain-lock 'cdvfile://'
-          
-    - name: "8. Forjar Bóveda de Seguridad (Inyección Binaria Directa)"
-      run: |
-        # Inyectamos el texto exacto de tu certificado blindado contra corrupción local
-        cat << 'EOF' > temp_base64.txt
+          --domain-lock 'cdvfile://'              
+    
+    - name: "8. Forjar Bóveda de Seguridad (Inyección Binaria Directa)"      
+      run: |        
+        cat << 'EOF' > temp_base64.txt        
         /u3+7QAAAAIAAAABAAAAAQAVY2VydGlmaWNhZG9fYWRuY3Jpc3RvAAABOrqBrfAAAAUCMIIE/jAOBgorBgEEASoCEQEBBQAEggTqga002coF1dh9fHLmxQv3yoQOwId4
         vxgDzPjJ3R9iUrXiwI5fpTjEA4ITIyDAPuChoeNtI6dHhfOnS6l71vRnBwp47scg
         t5FGIw7Ne7O4FZitHTpYl7TbI41ZUhhRrivg0B/2ryMXxuIgp9y44wkb708wybvR
@@ -107,7 +106,7 @@ jobs:
         SIb3DQEBAQUAA4IBDwAwggEKAoIBAQCK8OsdTGK3ennjpeSbTaYXh9oMsMAqk/7L
         DJGCyV0eNhlY82GrSnI78NHU0XvlMNPbWPbHOtOKHRTeWof++Vj7LF2+98jAun4b
         AbP3vBbihIvxk6laT9R98X8lfR3eGmdvqUV3rnjay07zuXpQmEUBiBw2fs4Y6Y3Z
-        8blIzqOGWrWkIioBGTaq1sK2FoLiqe26VqRNXOwOi8PM0+vmG9RS3sUGoHg0t9pi        
+        8blIzqOGWrWkIioBGTaq1sK2FoLiqe26VqRNXOwOi8PM0+vmG9RS3sUGoHg0t9pi
         ixlg1v0fRIeR760FQVSTkz2gV8YsP9oi3OB/tn7teM/ng6HMv+dbWO9+Ipui6Ocv
         I94IRWpKZBD20qRd3fY4QBmxj4UC4XQcZ3MsOKMr43QbgCETbHjvAgMBAAGjITAf
         MB0GA1UdDgQWBBQYbx6w7MejiW0nWK2tppRPdnbcTjANBgkqhkiG9w0BAQsFAAOC
@@ -116,78 +115,83 @@ jobs:
         kKuvEEN458wilL4akAXf1q3maEMxBzD+v9D2nyudfntAB1JyMBid3Iu1OZqHNSoV
         x/A16fgjoyPDEF3gPWE0gvvDR9c9nA3jlKcOicc8xeqElXLejJbBatetm7oCe8wz
         Dl3JiB4GlA3xGc8X7yPo9wFi+Mcu4rsVRUcBeR1YOkz3ZEXWxxp57MvA5GZCF+i8
-        vw/ACjEIWZeXZg+Iwk1rbUTDW6S2BJizrbJ72cPW/ndL1yL/cFzf
-        EOF
-        # Eliminamos espacios en blanco/saltos de línea y forjamos el binario final
-        tr -d '\n\r ' < temp_base64.txt | base64 -d > adncristo.Keystore
-
-    - name: "8.5. Purgar Dependencias Fantasma (Erradicación de Whitelist y Crypt)"
-      run: |
-        npm uninstall cordova-plugin-whitelist || true
-        cordova plugin rm cordova-plugin-whitelist --force || true
-        sed -i '/cordova-plugin-whitelist/d' config.xml || true
-        sed -i '/cordova-plugin-whitelist/d' package.json || true
-        rm -rf plugins/cordova-plugin-whitelist || true
+        vw/ACjEIWZeXZg+Iwk1rbUTDW6S2BJizrbJ72cPW/ndL1yL/cFzf        EOF 
+        # Eliminamos espacios en blanco/saltos de línea y forjamos el binario final        
+        tr -d '\n\r ' < temp_base64.txt | base64 -d > adncristo.Keystore    
+    
+    - name: "8.5. Purgar Dependencias Fantasma (Erradicación de Whitelist y Crypt)"      
+      run: |        
+        npm uninstall cordova-plugin-whitelist || true        
+        cordova plugin rm cordova-plugin-whitelist --force || true        
+        sed -i '/cordova-plugin-whitelist/d' config.xml || true        
+        sed -i '/cordova-plugin-whitelist/d' package.json || true        
+        rm -rf plugins/cordova-plugin-whitelist || true                
         
-        npm uninstall cordova-plugin-crypt-file-android || true
-        cordova plugin rm cordova-plugin-crypt-file-android --force || true
-        rm -rf plugins/cordova-plugin-crypt-file-android || true
-        rm -rf node_modules/cordova-plugin-crypt-file-android || true
+        # ☢️ EXTERMINIO FÍSICO DEL SECUESTRADOR DE CÓDIGO JAVA ☢️        
+        npm uninstall cordova-plugin-crypt-file-android || true        
+        cordova plugin rm cordova-plugin-crypt-file-android --force || true        
+        rm -rf plugins/cordova-plugin-crypt-file-android || true        
+        rm -rf node_modules/cordova-plugin-crypt-file-android || true    
 
-    - name: "9. Configurar Plataforma Android Embebida"
+    - name: "8.6. Actualización Táctica de Plugins Compatibles con API 35"
       run: |
-        npm config set fetch-retries 5
-        npm config set fetch-retry-mintimeout 20000
-        npm config set fetch-retry-maxtimeout 120000
-        npm cache clean --force
-        
-        cordova platform add android@13.0.0
-        cordova prepare android
+        # Cordova 13 requiere versiones modernas de la cámara y otros core-plugins
+        cordova plugin rm cordova-plugin-camera --force || true
+        cordova plugin add cordova-plugin-camera@latest || true
+        # Eliminamos el viejo splashscreen que bloquea el build
+        cordova plugin rm cordova-plugin-splashscreen --force || true
 
-    - name: "10. Blindaje Táctico (Forzar API 35 y Parches Legacy)"
-      run: |
-        find platforms/android/ -name "*.gradle" -exec sed -i -E 's/(^|[[:space:]])compile([[:space:]]|\()/\1implementation\2/g' {} + || true
-        
-        find platforms/android/ -name "*.java" -exec sed -i 's/org.apache.cordova.Whitelist/org.apache.cordova.AllowList/g' {} + || true
-        find platforms/android/ -name "*.java" -exec sed -i 's/Whitelist whitelist/AllowList whitelist/g' {} + || true
-        find platforms/android/ -name "*.java" -exec sed -i 's/(Whitelist)/(AllowList)/g' {} + || true
-        find platforms/android/ -name "*.java" -exec sed -i 's/isUrlWhiteListed/isUrlAllowListed/g' {} + || true
-        
-        echo "" >> platforms/android/app/build.gradle
-        echo "android { compileSdk 35 }" >> platforms/android/app/build.gradle
-        echo "android { defaultConfig { targetSdk 35 } }" >> platforms/android/app/build.gradle
-
-    - name: "11. Ensamblaje Final: Formato AAB (Google Play Store)"
-      run: |
-        cordova compile android --release -- \
-        --keystore=adncristo.Keystore \
-        --storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
-        --alias=${{ secrets.ANDROID_KEYSTORE_ALIAS }} \
-        --password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
-        --packageType=bundle \
-        --gradleArg=-PcdvCompileSdkVersion=35 \
-        --gradleArg=-PcdvTargetSdkVersion=35
-
-    - name: "12. Ensamblaje Final: Formato APK (Distribución Directa)"
-      run: |
-        cordova compile android --release -- \
-        --keystore=adncristo.Keystore \
-        --storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
-        --alias=${{ secrets.ANDROID_KEYSTORE_ALIAS }} \
-        --password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
-        --packageType=apk \
-        --gradleArg=-PcdvCompileSdkVersion=35 \
-        --gradleArg=-PcdvTargetSdkVersion=35
-
-    - name: "13. Preservar Artefactos Clínicos (Repositorio GitHub)"
-      uses: actions/upload-artifact@v4
-      with:
-        name: "Ungido-Boveda-API35-Release"
-        path: |
-          platforms/android/app/build/outputs/apk/release/*.apk
-          platforms/android/app/build/outputs/bundle/release/*.aab
+    - name: "9. Configurar Plataforma Android Embebida"      
+      run: |        
+        # Añadido escudo de red para prevenir fallos (ECONNRESET) de los servidores NPM   
+        npm config set fetch-retries 5        
+        npm config set fetch-retry-mintimeout 20000        
+        npm config set fetch-retry-maxtimeout 120000        
+        npm cache clean --force            
+        cordova platform add android@13.0.0        
+        cordova prepare android  
+    
+    - name: "10. Blindaje Táctico (Forzar API 35 y Parches Legacy)"      
+      run: |        
+        # 1. Parche quirúrgico Gradle: Cambia dependencias pero respeta métodos nativos        
+        find platforms/android/ -name "*.gradle" -exec sed -i -E 's/(^|[[:space:]])compile([[:space:]]|\()/\1implementation\2/g' {} + || true                
+        # 2. Parche Java: Migración forzada de Whitelist a AllowList para plugins obsoletos        
+        find platforms/android/ -name "*.java" -exec sed -i 's/org.apache.cordova.Whitelist/org.apache.cordova.AllowList/g' {} + || true        
+        find platforms/android/ -name "*.java" -exec sed -i 's/Whitelist whitelist/AllowList whitelist/g' {} + || true        
+        find platforms/android/ -name "*.java" -exec sed -i 's/(Whitelist)/(AllowList)/g' {} + || true        
+        find platforms/android/ -name "*.java" -exec sed -i 's/isUrlWhiteListed/isUrlAllowListed/g' {} + || true                
+        # 3. Inyectar API 35 a la fuerza bruta en el núcleo        
+        echo "" >> platforms/android/app/build.gradle        
+        echo "android { compileSdk 35 }" >> platforms/android/app/build.gradle        
+        echo "android { defaultConfig { targetSdk 35 } }" >> platforms/android/app/build.gradle    
+    
+    - name: "11. Ensamblaje Final: Formato AAB (Google Play Store)"      
+      run: |        
+        cordova compile android --release -- \        
+        --keystore=adncristo.Keystore \        
+        --storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \        
+        --alias=${{ secrets.ANDROID_KEYSTORE_ALIAS }} \        
+        --password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \        
+        --packageType=bundle \        
+        --gradleArg=-PcdvCompileSdkVersion=35 \        
+        --gradleArg=-PcdvTargetSdkVersion=35    
+    
+    - name: "12. Ensamblaje Final: Formato APK (Distribución Directa)"      
+      run: |        
+        cordova compile android --release -- \        
+        --keystore=adncristo.Keystore \        
+        --storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \        
+        --alias=${{ secrets.ANDROID_KEYSTORE_ALIAS }} \        
+        --password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \        
+        --packageType=apk \        
+        --gradleArg=-PcdvCompileSdkVersion=35 \        
+        --gradleArg=-PcdvTargetSdkVersion=35    
+    
+    - name: "13. Preservar y Exportar Artefactos Clínicos (APK + AAB)"      
+      uses: actions/upload-artifact@v4      
+      with:        
+        name: "Ungido-Boveda-API35-Release"        
+        path: |          
+          platforms/android/app/build/outputs/apk/release/*.apk          
+          platforms/android/app/build/outputs/bundle/release/*.aab        
         retention-days: 90
-          Puedes revisar los detalles de la ejecución en la terminal de acciones de GitHub.
-        # Descomenta la siguiente línea si deseas enviar el archivo como adjunto al correo.
-        # PRECAUCIÓN: Gmail y Outlook suelen rebotar correos si el ZIP supera los 25 MB o si detectan que contiene un .apk dentro.
-        # attachments: Ungido-Release-API35.zip
