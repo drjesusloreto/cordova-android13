@@ -1578,3 +1578,55 @@ window.MotorDatos = {
         return resultado;
     }
 };
+var LLAVE_MAESTRA = "__LLAVE_TACTICA__";
+window.inyectarModuloCifrado = function(rutaArchivoCifrado, LLAVE_MAESTRA) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            console.log(`[Orquestador] Solicitando descifrado de: ${rutaArchivoCifrado}`);
+            
+            // 1. Leer el archivo encriptado (.enc) físicamente
+            const datosCifrados = await window.leerDataLocal(rutaArchivoCifrado);
+            if (!datosCifrados) throw new Error("Archivo encriptado no encontrado.");
+
+            // 2. Levantar el Worker Seguro
+            const worker = await window.crearWorkerSeguro('js/worker-descifrador.js');
+            if (!worker) throw new Error("Fallo al inicializar el entorno seguro (Worker).");
+
+            // 3. Escuchar la respuesta del hilo en la sombra
+            worker.onmessage = function(e) {
+                if (e.data.estado === 'exito') {
+                    // Inyectar el código descifrado directamente en la memoria del navegador
+                    let scriptElement = document.createElement('script');
+                    scriptElement.className = 'dinamico-modulo modulo-blindado';
+                    scriptElement.textContent = e.data.codigo;
+                    document.body.appendChild(scriptElement);
+                    
+                    console.log(`[Orquestador] 🛡️ Módulo inyectado exitosamente.`);
+                    worker.terminate(); // Purgar el worker de la RAM
+                    resolve(true);
+                } else {
+                    console.error("[Orquestador] 💥 Fallo de descifrado:", e.data.error);
+                    worker.terminate();
+                    reject(e.data.error);
+                }
+            };
+
+            worker.onerror = function(err) {
+                worker.terminate();
+                reject("Error interno en el hilo del Worker.");
+            };
+
+            // 4. Ordenar la ejecución táctica
+            worker.postMessage({
+                accion: 'descifrar',
+                id: rutaArchivoCifrado,
+                datosCifrados: datosCifrados,
+                llave: llaveTactica
+            });
+
+        } catch (error) {
+            console.error(`[Orquestador] Error al procesar ${rutaArchivoCifrado}:`, error);
+            reject(error);
+        }
+    });
+};
