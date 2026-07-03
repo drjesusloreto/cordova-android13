@@ -97,7 +97,7 @@ jobs:
         FhRmn3yRTN15eAZ3w7POUiySjdC87dGd8S2I2iKFTKYnjA7wQ0uhSBeiIfRsji3z
         cX3We+Bvkc9Au0Rj7HfkxyO9ONWF1Bk1HLLrVI6ulJvKaDkl8wAAAAEABVguNTA5
         AAADnzCCA5swggKDoAMCAQICBCwa/YcwDQYJKoZIhvcNAQELBQAwfTELMAkGA1UE
-        BhMCdmUxEDAOBgNVBAgTB0d1YXJpY28xETAPBgNVBAcTCENhbGFib3pvMRswGQYD
+        BhMCdmUxEDAOBgNVBAgTB0d1YXJpY28xETAPBgNVBAcTCENhbGFibozonRswGQYD
         VQQKExJBRE4gREUgQ1JJU1RPIEMuQS4xFTATBgNVBAsTDFRlbGVtZWRpY2luYTEV
         MBMGA1UEAxMMSmVzdXMgTG9yZXRvMCAXDTEyMTEwMTA1NDYxNVoYDzI2OTcwNDI0
         MDU0NjE1WjB9MQswCQYDVQQGEwJ2ZTEQMA4GA1UECBMHR3VhcmljbzERMA8GA1UE
@@ -137,15 +137,12 @@ jobs:
 
     - name: "8.6. Actualización Táctica de Plugins Compatibles con API 35"
       run: |
-        # Cordova 13 requiere versiones modernas de la cámara y otros core-plugins
         cordova plugin rm cordova-plugin-camera --force || true
         cordova plugin add cordova-plugin-camera@latest || true
-        # Eliminamos el viejo splashscreen que bloquea el build
         cordova plugin rm cordova-plugin-splashscreen --force || true
 
     - name: "9. Configurar Plataforma Android Embebida"      
       run: |        
-        # Añadido escudo de red para prevenir fallos (ECONNRESET) de los servidores NPM   
         npm config set fetch-retries 5        
         npm config set fetch-retry-mintimeout 20000        
         npm config set fetch-retry-maxtimeout 120000        
@@ -155,38 +152,38 @@ jobs:
     
     - name: "10. Blindaje Táctico (Forzar API 35 y Parches Legacy)"      
       run: |        
-        # 1. Parche quirúrgico Gradle: Cambia dependencias pero respeta métodos nativos        
         find platforms/android/ -name "*.gradle" -exec sed -i -E 's/(^|[[:space:]])compile([[:space:]]|\()/\1implementation\2/g' {} + || true                
-        # 2. Parche Java: Migración forzada de Whitelist a AllowList para plugins obsoletos        
         find platforms/android/ -name "*.java" -exec sed -i 's/org.apache.cordova.Whitelist/org.apache.cordova.AllowList/g' {} + || true        
         find platforms/android/ -name "*.java" -exec sed -i 's/Whitelist whitelist/AllowList whitelist/g' {} + || true        
         find platforms/android/ -name "*.java" -exec sed -i 's/(Whitelist)/(AllowList)/g' {} + || true        
         find platforms/android/ -name "*.java" -exec sed -i 's/isUrlWhiteListed/isUrlAllowListed/g' {} + || true                
-        # 3. Inyectar API 35 a la fuerza bruta en el núcleo        
         echo "" >> platforms/android/app/build.gradle        
         echo "android { compileSdk 35 }" >> platforms/android/app/build.gradle        
         echo "android { defaultConfig { targetSdk 35 } }" >> platforms/android/app/build.gradle    
-    
-    - name: "11 y 12. Ensamblaje Simultáneo (AAB + APK) vía Motor Gradle Directo"      
+
+    - name: "10.5. Operación Clonación Multi-Ruta y Creación del Búnker Seguro"
       run: |
-        # Entramos directamente a la matriz nativa de Android, esquivando el CLI de Cordova
-        cd platforms/android
-        
-        # Disparamos ambas compilaciones (APK = assembleRelease, AAB = bundleRelease) en 1 solo comando
-        chmod +x gradlew
-        ./gradlew assembleRelease bundleRelease \
-          -PcdvCompileSdkVersion=35 \
-          -PcdvTargetSdkVersion=35 \
-          -PcdvReleaseKeystore=${{ github.workspace }}/adncristo.Keystore \
-          -PcdvReleaseKeystorePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
-          -PcdvReleaseKeyAlias=${{ secrets.ANDROID_KEYSTORE_ALIAS }} \
-          -PcdvReleaseKeyPassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          
-    - name: "13. Preservar y Exportar Artefactos Clínicos (APK + AAB)"      
+        # Inyectamos el Keystore en los tres niveles estratégicos para evitar los bugs de navegación de Cordova
+        cp adncristo.Keystore platforms/android/ || true
+        cp adncristo.Keystore platforms/android/app/ || true
+        # Forjamos el búnker seguro aislado de limpiezas automáticas
+        mkdir -p ${{ github.workspace }}/artifacts
+
+    - name: "11. Ensamblaje y Firma del Formato AAB (Google Play Store)"      
+      run: |
+        cordova compile android --release --packageType=bundle -- --keystore=adncristo.Keystore --storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} --alias=${{ secrets.ANDROID_KEYSTORE_ALIAS }} --password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} --gradleArg=-PcdvCompileSdkVersion=35 --gradleArg=-PcdvTargetSdkVersion=35
+        # Extraemos inmediatamente el AAB generado hacia nuestro búnker seguro
+        cp platforms/android/app/build/outputs/bundle/release/*.aab ${{ github.workspace }}/artifacts/ || true
+    
+    - name: "12. Ensamblaje y Firma del Formato APK (Distribución Directa)"      
+      run: |
+        cordova compile android --release --packageType=apk -- --keystore=adncristo.Keystore --storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} --alias=${{ secrets.ANDROID_KEYSTORE_ALIAS }} --password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} --gradleArg=-PcdvCompileSdkVersion=35 --gradleArg=-PcdvTargetSdkVersion=35 
+        # Extraemos el APK generado hacia nuestro búnker seguro sin que afecte al AAB que ya resguardamos
+        cp platforms/android/app/build/outputs/apk/release/*.apk ${{ github.workspace }}/artifacts/ || true
+    
+    - name: "13. Preservar y Exportar Artefactos Clínicos Finales (APK + AAB)"      
       uses: actions/upload-artifact@v4      
       with:        
         name: "Ungido-Boveda-API35-Release"        
-        path: |          
-          platforms/android/app/build/outputs/apk/release/*.apk          
-          platforms/android/app/build/outputs/bundle/release/*.aab        
+        path: ${{ github.workspace }}/artifacts/
         retention-days: 90
