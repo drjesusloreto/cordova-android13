@@ -1,4 +1,4 @@
-name: "Ungido Bóveda - Pipeline de Compilación Táctica API 35"
+name: "Ungido - Pipeline de Compilación Táctica API 35"
 
 on:
   push:
