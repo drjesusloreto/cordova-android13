@@ -56,12 +56,10 @@
       "cordova-plugin-network-information": {},
       "cordova-plugin-splashscreen": {},
       "phonegap-plugin-contentsync": {},
-      "com.albahra.plugin.networkinterface": {},
       "cordova-plugin-camera": {
         "ANDROID_SUPPORT_V4_VERSION": "27.+"
       },
       "cordova-plugin-file-transfer": {},      
-      "cordova-plugin-secure-storage": {},
       "cordova-plugin-advanced-http": {
         "ANDROIDBLACKLISTSECURESOCKETPROTOCOLS": "SSLv3,TLSv1"
       },
