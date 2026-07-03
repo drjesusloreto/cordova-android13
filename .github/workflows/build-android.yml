@@ -167,12 +167,21 @@ jobs:
         echo "android { compileSdk 35 }" >> platforms/android/app/build.gradle        
         echo "android { defaultConfig { targetSdk 35 } }" >> platforms/android/app/build.gradle    
     
-    - name: "11. Ensamblaje Final: Formato AAB (Google Play Store)"      
-      run: cordova compile android --release --packageType=bundle -- --gradleArg=-PcdvCompileSdkVersion=35 --gradleArg=-PcdvTargetSdkVersion=35 --gradleArg=-PcdvReleaseKeystore=${{ github.workspace }}/adncristo.Keystore --gradleArg=-PcdvReleaseKeystorePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} --gradleArg=-PcdvReleaseKeyAlias=${{ secrets.ANDROID_KEYSTORE_ALIAS }} --gradleArg=-PcdvReleaseKeyPassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-    
-    - name: "12. Ensamblaje Final: Formato APK (Distribución Directa)"      
-      run: cordova compile android --release --packageType=apk -- --gradleArg=-PcdvCompileSdkVersion=35 --gradleArg=-PcdvTargetSdkVersion=35 --gradleArg=-PcdvReleaseKeystore=${{ github.workspace }}/adncristo.Keystore --gradleArg=-PcdvReleaseKeystorePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} --gradleArg=-PcdvReleaseKeyAlias=${{ secrets.ANDROID_KEYSTORE_ALIAS }} --gradleArg=-PcdvReleaseKeyPassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} 
-    
+    - name: "11 y 12. Ensamblaje Simultáneo (AAB + APK) vía Motor Gradle Directo"      
+      run: |
+        # Entramos directamente a la matriz nativa de Android, esquivando el CLI de Cordova
+        cd platforms/android
+        
+        # Disparamos ambas compilaciones (APK = assembleRelease, AAB = bundleRelease) en 1 solo comando
+        chmod +x gradlew
+        ./gradlew assembleRelease bundleRelease \
+          -PcdvCompileSdkVersion=35 \
+          -PcdvTargetSdkVersion=35 \
+          -PcdvReleaseKeystore=${{ github.workspace }}/adncristo.Keystore \
+          -PcdvReleaseKeystorePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
+          -PcdvReleaseKeyAlias=${{ secrets.ANDROID_KEYSTORE_ALIAS }} \
+          -PcdvReleaseKeyPassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          
     - name: "13. Preservar y Exportar Artefactos Clínicos (APK + AAB)"      
       uses: actions/upload-artifact@v4      
       with:        
