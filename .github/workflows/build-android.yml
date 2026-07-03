@@ -148,7 +148,7 @@ jobs:
         npm config set fetch-retry-mintimeout 20000        
         npm config set fetch-retry-maxtimeout 120000        
         npm cache clean --force            
-        cordova platform add android@13.0.0        
+        cordova platform add android@14.0.0        
         cordova prepare android  
     
     - name: "10. Blindaje Táctico (Forzar API 35 y Parches Legacy)"      
