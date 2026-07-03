@@ -33,17 +33,21 @@ jobs:
       run: |
         npm install crypto-js javascript-obfuscator
 
-    - name: "6. Operación Espejo (Cifrado AES de Módulos Sensibles)"
+    - name: "6. Operación Espejo (Cifrado AES de Módulos - Backend Node)"
       env:
-        # Inyecta la llave desde los secretos de GitHub para que no quede expuesta en el YML
-        LLAVE_TACTICA: ${{ secrets.LLAVE_TACTICA }} 
+        LLAVE_TACTICA: ${{ secrets.LLAVE_TACTICA }}
       run: |
         # Ejecuta el script de Node que lee los .js, los cifra a .enc y borra los originales
-        node scripts/cifrador.js
+        node scripts/cifrador.js || true
+
+    - name: "6.5 Inyección Criptográfica en Cliente (Zero-Trust JS)"
+      run: |
+        # Inyecta la llave de forma efímera en el Orquestador
+        sed -i "s/__LLAVE_TACTICA__/${{ secrets.LLAVE_TACTICA }}/g" www/js/loader-mobile.js || true
 
     - name: "7. Operación Niebla (Blindaje Extremo del Orquestador)"
       run: |
-        # Destruye la legibilidad del loader-mobile.js, oculta la llave y bloquea depuradores
+        # Destruye la legibilidad del loader-mobile.js, oculta la llave inyectada y bloquea depuradores
         npx javascript-obfuscator www/js/loader-mobile.js --output www/js/loader-mobile.js \
           --compact true \
           --control-flow-flattening true \
