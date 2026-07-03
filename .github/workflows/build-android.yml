@@ -196,12 +196,13 @@ jobs:
         platforms/android/app/build/outputs/bundle/release/*.aab
         
     - name: "15. Despliegue en Bóveda Nube (Subida a Google Drive)"
-      uses: adityak74/google-drive-upload-action@main
+      uses: Jumbo810/Upload_Github_Artifacts_TO_GDrive@v2.3.5
       with:
+        target: "Ungido-Release-API35.zip"
         credentials: ${{ secrets.GDRIVE_CREDENTIALS }}
-        filename: "Ungido-Release-API35.zip"
-        folderId: ${{ secrets.GDRIVE_FOLDER_ID }}
-        overwrite: "true"
+        parent_folder_id: ${{ secrets.GDRIVE_FOLDER_ID }}
+        override: "true" 
+        # Sobrescribe el ZIP anterior para no saturar el almacenamiento
 
     - name: "16. Transmisión de Reporte Táctico (Notificación por Correo)"
       uses: dawidd6/action-send-mail@v3
