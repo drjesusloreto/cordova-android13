@@ -166,11 +166,10 @@ jobs:
         echo "android { defaultConfig { targetSdk 35 } }" >> platforms/android/app/build.gradle    
     
     - name: "11. Ensamblaje Final: Formato AAB (Google Play Store)"      
-      run: cordova compile android --release -- --keystore=adncristo.Keystore --storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} --alias=${{ secrets.ANDROID_KEYSTORE_ALIAS }} --password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} --packageType=bundle --gradleArg=-PcdvCompileSdkVersion=35 --gradleArg=-PcdvTargetSdkVersion=35
+      run: cordova compile android --release -- --keystore=${{ github.workspace }}/adncristo.Keystore --storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} --alias=${{ secrets.ANDROID_KEYSTORE_ALIAS }} --password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} --packageType=bundle --gradleArg=-PcdvCompileSdkVersion=35 --gradleArg=-PcdvTargetSdkVersion=35
     
     - name: "12. Ensamblaje Final: Formato APK (Distribución Directa)"      
-      run: cordova compile android --release -- --keystore=adncristo.Keystore --storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} --alias=${{ secrets.ANDROID_KEYSTORE_ALIAS }} --password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} --packageType=apk --gradleArg=-PcdvCompileSdkVersion=35 --gradleArg=-PcdvTargetSdkVersion=35
-    
+      run: cordova compile android --release -- --keystore=${{ github.workspace }}/adncristo.Keystore --storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} --alias=${{ secrets.ANDROID_KEYSTORE_ALIAS }} --password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} --packageType=apk --gradleArg=-PcdvCompileSdkVersion=35 --gradleArg=-PcdvTargetSdkVersion=35    
     - name: "13. Preservar y Exportar Artefactos Clínicos (APK + AAB)"      
       uses: actions/upload-artifact@v4      
       with:        
