@@ -627,7 +627,8 @@ async function iniciarModulo(nombreModulo) {
         alert("Falla estructural: No se pudo leer la memoria del módulo.");
         iniciarPanelDeControl();
     }
-};
+}
+
 // ==============================================================================
 // 4. MOTOR DE NAVEGACIÓN Y EXTRACCIÓN (FORENSE JSON)
 // ==============================================================================
@@ -999,6 +1000,98 @@ window.print = function() {
     window.postMessage({ accion: 'imprimir', contenido: htmlPuro }, '*');
 };
 
+function obtenerEntradasDeCarpeta(pathAbsoluto) {
+    return new Promise((resolve, reject) => {
+        window.resolveLocalFileSystemURL(pathAbsoluto, function(dirEntry) {
+            let directoryReader = dirEntry.createReader();
+            directoryReader.readEntries(function(entries) { resolve(entries); }, reject);
+        }, reject);
+    });
+}
+
+function leerArchivoLocal(pathAbsoluto) {
+    return new Promise((resolve, reject) => {
+        if (pathAbsoluto.startsWith('http://') || pathAbsoluto.startsWith('https://') || pathAbsoluto.startsWith('data:')) {
+            return resolve(''); 
+        }
+        window.resolveLocalFileSystemURL(pathAbsoluto, (entry) => {
+            if (!entry.isFile) {
+                console.warn(`[Auditoría] Intento de leer un directorio como archivo: ${pathAbsoluto}`);
+                return resolve('');
+            }
+            entry.file((file) => {
+                let reader = new FileReader();
+                reader.onload = function() { resolve(this.result); };
+                reader.onerror = function() { reject(new Error("Error leyendo memoria física")); };
+                reader.readAsText(file);
+            }, (err) => reject(new Error(`Fallo de lectura interna (Cód: ${err.code})`)));
+        }, (err) => reject(new Error(`Archivo físico no encontrado: ${pathAbsoluto}`)));
+    });
+}
+
+function leerArchivoComoBase64(pathAbsoluto) {
+    return new Promise((resolve, reject) => {
+        window.resolveLocalFileSystemURL(pathAbsoluto, (fileEntry) => {
+            fileEntry.file((file) => {
+                let reader = new FileReader();
+                reader.onload = function() { resolve(this.result); }; 
+                reader.onerror = function() { reject(new Error("Error leyendo base64")); };
+                reader.readAsDataURL(file); 
+            }, reject);
+        }, reject);
+    });
+}
+
+function orquestarSincronizacion(paquetes, uiElement) {
+    let completados = 0;
+    for (let i = 0; i < paquetes.length; i++) {
+        let paquete = paquetes[i];
+        
+        var sync = ContentSync.sync({ src: paquete.url, id: paquete.nombre, type: 'replace', copyCordova: false });
+        
+        sync.on('progress', (data) => { 
+            if(uiElement) uiElement.innerText = `Sincronizando ${paquete.nombre}: ${data.progress}%`; 
+        });
+        
+        sync.on('complete', (data) => {
+            let rutaSegura = data.localPath;
+            if (!rutaSegura.startsWith('file://') && !rutaSegura.startsWith('cdvfile://')) {
+                rutaSegura = 'file://' + (rutaSegura.startsWith('/') ? '' : '/') + rutaSegura;
+            }
+            
+            localStorage.setItem(`ruta_fisica_${paquete.nombre}`, rutaSegura);
+            
+            completados++;
+            if (completados === paquetes.length) {
+                if(uiElement) uiElement.innerText = "Sincronización completada. Iniciando terminal...";
+                setTimeout(() => iniciarPanelDeControl(), 500);
+            }
+        });
+        
+        sync.on('error', (e) => {
+            alert(`Falla de descarga en módulo: ${paquete.nombre}\nRevise su conexión a internet.`); 
+            completados++;
+            if (completados === paquetes.length) iniciarPanelDeControl();
+        });
+    }
+}
+
+function ejecutarProtocoloDestruccionFisica(motivo) {
+    localStorage.clear(); 
+    if (window.caches) caches.keys().then(names => { for (let n of names) caches.delete(n); });
+    alert("☢️ PROTOCOLO WIPE EJECUTADO ☢️\n\nMotivo: " + motivo);
+    if (navigator.app && navigator.app.exitApp) navigator.app.exitApp(); else window.close();
+}
+
+function solicitarPermisosTacticos() {
+    return new Promise((resolve, reject) => {
+        if (!cordova.plugins || !cordova.plugins.permissions) return resolve(); 
+        const p = cordova.plugins.permissions;
+        p.requestPermissions([p.CAMERA, p.ACCESS_FINE_LOCATION, p.WRITE_EXTERNAL_STORAGE, p.READ_EXTERNAL_STORAGE], 
+            (status) => status.hasPermission ? resolve() : reject("Denegado"), reject);
+    });
+}
+
 function retrocederNavegacion() {
     if (window.jQuery && window.jQuery('.modal.show').length > 0) {
         window.jQuery('.modal.show').modal('hide');
@@ -1229,6 +1322,7 @@ async function procesarIframeDetectado(iframe) {
         iframe.srcdoc = `<div style="color:red; text-align:center; padding:20px;">Error 404: Módulo Inaccesible<br><small>${rutaCompleta}</small></div>`;
     }
 };
+
 window.leerDataLocal = async function(rutaRelativa) {
     try {
         let base = window.moduloActualBaseURL;
@@ -1271,25 +1365,16 @@ window.importarArchivoExterno = function(extensiones, callback) {
     inputFalso.click();
 };
 
-// 🛡️ MODIFICACIÓN API 35: Blindaje frente al Scoped Storage
 window.guardarArchivoExterno = function(nombreArchivo, contenidoString) {
     return new Promise((resolve, reject) => {
-        if (!window.cordova) return reject(new Error("Entorno móvil requerido."));
-        
-        // 🛡️ externalDataDirectory apunta al Sandbox seguro. Cero permisos requeridos en API 30+.
-        let directorioSeguro = cordova.file.externalDataDirectory || cordova.file.dataDirectory;
+        if (!window.cordova) return reject(new Error("Móvil requerido."));
+        let directorioPublico = cordova.file.externalRootDirectory + "Download/";
         let nombreSubcarpeta = "OmniEngine_Exports";
-
-        window.resolveLocalFileSystemURL(directorioSeguro, function(dirEntry) {
+        window.resolveLocalFileSystemURL(directorioPublico, function(dirEntry) {
             dirEntry.getDirectory(nombreSubcarpeta, { create: true }, function(subDirEntry) {
                 subDirEntry.getFile(nombreArchivo, { create: true, exclusive: false }, function(fileEntry) {
                     fileEntry.createWriter(function(fileWriter) {
-                        fileWriter.onwriteend = function() { 
-                            console.log("📦 Archivo forense asegurado en bóveda externa: " + fileEntry.nativeURL);
-                            resolve(fileEntry.nativeURL); 
-                        };
-                        fileWriter.onerror = reject;
-                        
+                        fileWriter.onwriteend = function() { resolve(fileEntry.nativeURL); };
                         let tipoMime = nombreArchivo.endsWith('.json') ? 'application/json' : (nombreArchivo.endsWith('.csv') ? 'text/csv' : 'text/plain');
                         fileWriter.write(new Blob([contenidoString], { type: tipoMime }));
                     }, reject);
@@ -1340,106 +1425,6 @@ window.eliminarArchivoLocal = function(rutaRelativa) {
         }, (err) => resolve(true));
     });
 };
-
-function obtenerEntradasDeCarpeta(pathAbsoluto) {
-    return new Promise((resolve, reject) => {
-        window.resolveLocalFileSystemURL(pathAbsoluto, function(dirEntry) {
-            let directoryReader = dirEntry.createReader();
-            directoryReader.readEntries(function(entries) { resolve(entries); }, reject);
-        }, reject);
-    });
-}
-
-function leerArchivoLocal(pathAbsoluto) {
-    return new Promise((resolve, reject) => {
-        if (pathAbsoluto.startsWith('http://') || pathAbsoluto.startsWith('https://') || pathAbsoluto.startsWith('data:')) {
-            return resolve(''); 
-        }
-        window.resolveLocalFileSystemURL(pathAbsoluto, (entry) => {
-            if (!entry.isFile) {
-                console.warn(`[Auditoría] Intento de leer un directorio como archivo: ${pathAbsoluto}`);
-                return resolve('');
-            }
-            entry.file((file) => {
-                let reader = new FileReader();
-                reader.onload = function() { resolve(this.result); };
-                reader.onerror = function() { reject(new Error("Error leyendo memoria física")); };
-                reader.readAsText(file);
-            }, (err) => reject(new Error(`Fallo de lectura interna (Cód: ${err.code})`)));
-        }, (err) => reject(new Error(`Archivo físico no encontrado: ${pathAbsoluto}`)));
-    });
-}
-
-function leerArchivoComoBase64(pathAbsoluto) {
-    return new Promise((resolve, reject) => {
-        window.resolveLocalFileSystemURL(pathAbsoluto, (fileEntry) => {
-            fileEntry.file((file) => {
-                let reader = new FileReader();
-                reader.onload = function() { resolve(this.result); }; 
-                reader.onerror = function() { reject(new Error("Error leyendo base64")); };
-                reader.readAsDataURL(file); 
-            }, reject);
-        }, reject);
-    });
-}
-
-function orquestarSincronizacion(paquetes, uiElement) {
-    let completados = 0;
-    for (let i = 0; i < paquetes.length; i++) {
-        let paquete = paquetes[i];
-        
-        var sync = ContentSync.sync({ src: paquete.url, id: paquete.nombre, type: 'replace', copyCordova: false });
-        
-        sync.on('progress', (data) => { 
-            if(uiElement) uiElement.innerText = `Sincronizando ${paquete.nombre}: ${data.progress}%`; 
-        });
-        
-        sync.on('complete', (data) => {
-            let rutaSegura = data.localPath;
-            if (!rutaSegura.startsWith('file://') && !rutaSegura.startsWith('cdvfile://')) {
-                rutaSegura = 'file://' + (rutaSegura.startsWith('/') ? '' : '/') + rutaSegura;
-            }
-            
-            localStorage.setItem(`ruta_fisica_${paquete.nombre}`, rutaSegura);
-            
-            completados++;
-            if (completados === paquetes.length) {
-                if(uiElement) uiElement.innerText = "Sincronización completada. Iniciando terminal...";
-                setTimeout(() => iniciarPanelDeControl(), 500);
-            }
-        });
-        
-        sync.on('error', (e) => {
-            alert(`Falla de descarga en módulo: ${paquete.nombre}\nRevise su conexión a internet.`); 
-            completados++;
-            if (completados === paquetes.length) iniciarPanelDeControl();
-        });
-    }
-}
-
-function ejecutarProtocoloDestruccionFisica(motivo) {
-    localStorage.clear(); 
-    if (window.caches) caches.keys().then(names => { for (let n of names) caches.delete(n); });
-    alert("☢️ PROTOCOLO WIPE EJECUTADO ☢️\n\nMotivo: " + motivo);
-    if (navigator.app && navigator.app.exitApp) navigator.app.exitApp(); else window.close();
-}
-
-// 🛡️ MODIFICACIÓN API 35: Purga de READ/WRITE_EXTERNAL_STORAGE por obsolescencia
-function solicitarPermisosTacticos() {
-    return new Promise((resolve, reject) => {
-        if (!cordova.plugins || !cordova.plugins.permissions) return resolve(); 
-        const p = cordova.plugins.permissions;
-        
-        // El acceso al Sandbox de archivos ya viene implícito en el SO sin necesidad de permisos extra.
-        let permisosCriticos = [
-            p.CAMERA, 
-            p.ACCESS_FINE_LOCATION
-        ];
-        
-        p.requestPermissions(permisosCriticos, 
-            (status) => status.hasPermission ? resolve() : reject("Denegado"), reject);
-    });
-}
 
 window.MotorDatos = {
     _cacheColecciones: {},
