@@ -166,8 +166,8 @@ jobs:
         
         # 4. Inyectar API 35 a la fuerza bruta en el núcleo
         echo "" >> platforms/android/app/build.gradle
-        echo "android { compileSdk 35 }" >> platforms/android/app/build.gradle
-        echo "android { defaultConfig { targetSdk 35 } }" >> platforms/android/app/build.gradle
+        echo "android { compileSdk 36 }" >> platforms/android/app/build.gradle
+        echo "android { defaultConfig { targetSdk 36 } }" >> platforms/android/app/build.gradle
 
     - name: "11. Ensamblaje Final: Formato AAB (Google Play Store)"
       run: |
@@ -177,8 +177,8 @@ jobs:
         --alias="${{ secrets.ANDROID_KEYSTORE_ALIAS }}" \
         --password="${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
         --packageType=bundle \
-        --gradleArg=-PcdvCompileSdkVersion=35 \
-        --gradleArg=-PcdvTargetSdkVersion=35
+        --gradleArg=-PcdvCompileSdkVersion=36 \
+        --gradleArg=-PcdvTargetSdkVersion=36
         
         mkdir -p ${{ github.workspace }}/bunker_aab
         cp platforms/android/app/build/outputs/bundle/release/*.aab ${{ github.workspace }}/bunker_aab/ || true
@@ -191,8 +191,8 @@ jobs:
         --alias="${{ secrets.ANDROID_KEYSTORE_ALIAS }}" \
         --password="${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
         --packageType=apk \
-        --gradleArg=-PcdvCompileSdkVersion=35 \
-        --gradleArg=-PcdvTargetSdkVersion=35
+        --gradleArg=-PcdvCompileSdkVersion=36 \
+        --gradleArg=-PcdvTargetSdkVersion=36
         
         mkdir -p platforms/android/app/build/outputs/bundle/release/
         cp ${{ github.workspace }}/bunker_aab/*.aab platforms/android/app/build/outputs/bundle/release/ || true
@@ -200,7 +200,7 @@ jobs:
     - name: "13. Preservar y Exportar Artefactos Clínicos (APK + AAB)"
       uses: actions/upload-artifact@v4
       with:
-        name: "Ungido-Boveda-API35-Release"
+        name: "Ungido-Boveda-API36-Release"
         path: |
           platforms/android/app/build/outputs/apk/release/*.apk
           platforms/android/app/build/outputs/bundle/release/*.aab
